@@ -21,7 +21,7 @@ st.set_page_config(
 
 
 # ============================================================
-# CSS CUSTOM
+# CSS CUSTOM (TERMASUK TOOLTIP)
 # ============================================================
 
 st.markdown("""
@@ -179,6 +179,74 @@ st.markdown("""
         transform: scale(1.02);
         box-shadow: 0 4px 12px rgba(40,167,69,0.4);
     }
+    
+    /* ====== STYLE TOOLTIP ====== */
+    .tooltip-container {
+        position: relative;
+        display: inline-block;
+        margin-left: 6px;
+        cursor: help;
+    }
+    .tooltip-container .tooltip-icon {
+        background-color: #e9ecef;
+        color: #667eea;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        border: 1px solid #ced4da;
+        transition: background-color 0.2s;
+    }
+    .tooltip-container:hover .tooltip-icon {
+        background-color: #667eea;
+        color: white;
+    }
+    .tooltip-container .tooltip-text {
+        visibility: hidden;
+        width: 220px;
+        background-color: #1a1a2e;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 8px 10px;
+        position: absolute;
+        z-index: 9999;
+        bottom: 130%;
+        left: 50%;
+        margin-left: -110px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 0.8rem;
+        font-weight: 400;
+        line-height: 1.4;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        pointer-events: none;
+    }
+    .tooltip-container .tooltip-text::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #1a1a2e transparent transparent transparent;
+    }
+    .tooltip-container:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+    .slider-label-with-tooltip {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 4px;
+        margin-bottom: 0px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -237,6 +305,57 @@ def format_attribute_name(attr):
             label = attr[len(prefix):]
             break
     return label.replace('-', ' ').title()
+
+
+# ============================================================
+# FUNGSI TOOLTIP (ARTI SINGKAT ATRIBUT)
+# ============================================================
+
+def get_tooltip_text(attr):
+    """Mengembalikan arti singkat dari atribut."""
+    attr_lower = attr.lower()
+    tooltips = {
+        'decision': "Kemampuan memilih solusi terbaik secara cepat.",
+        'planning': "Kemampuan menyusun langkah kerja terstruktur.",
+        'teamwork': "Kemampuan bekerja sama dalam kelompok.",
+        'confident': "Kepercayaan diri dalam memimpin/mengelola.",
+        'meet': "Kemampuan menyelesaikan tugas tepat waktu.",
+        'stress': "Kemampuan tetap tenang di situasi mendesak.",
+        'communicate': "Kemampuan menyampaikan informasi dengan jelas.",
+        'boosting': "Kemampuan menghasilkan ide-ide baru.",
+        'multitask': "Kemampuan mengerjakan beberapa tugas sekaligus.",
+        'working': "Kemampuan bekerja secara mandiri.",
+        'opinion': "Kemampuan menyampaikan pendapat dengan logis.",
+        'resolve': "Kemampuan menyelesaikan konflik antar individu.",
+        'convey': "Kemampuan menyampaikan pesan secara efektif.",
+        'alone': "Kemampuan mengambil tanggung jawab sendiri.",
+        'rearranging': "Kemampuan beradaptasi dengan perubahan.",
+        'inspiration': "Kemampuan menemukan ide dari lingkungan.",
+        'motivation': "Dorongan untuk mencapai tujuan karier.",
+        'emotional': "Kemampuan mengelola emosi diri.",
+        'demonstrator': "Kemampuan memperagakan suatu keterampilan.",
+        'good leader': "Kemampuan memimpin dan mengarahkan orang.",
+        'good listener': "Kemampuan mendengarkan orang lain aktif.",
+        'oral': "Kemampuan komunikasi lisan yang jelas.",
+        'team building': "Kemampuan membangun kekompakan tim.",
+        'area of interest': "Kejelasan bidang minat karier.",
+        'good presenter': "Kemampuan presentasi di depan audiens.",
+        'coach': "Kemampuan membimbing orang lain.",
+        'interpersonal': "Kemampuan membangun hubungan baik.",
+        'time management': "Kemampuan mengatur waktu efisien.",
+        'quality management': "Kemampuan menjaga standar kualitas.",
+        'blend': "Kemampuan menggabungkan berbagai keterampilan.",
+        'gain': "Kemampuan memperoleh keterampilan baru.",
+        'new hands-on': "Pengalaman praktik langsung di lapangan.",
+        'group project': "Pengalaman bekerja dalam proyek kelompok.",
+        'developing projects': "Kemampuan mengembangkan proyek.",
+        'cost/time': "Kemampuan mengelola biaya dan waktu.",
+        'administrative': "Kemampuan mengelola dokumen dan administrasi."
+    }
+    for keyword, text in tooltips.items():
+        if keyword in attr_lower:
+            return text
+    return "Keterampilan pendukung kesiapan kerja."
 
 
 # ============================================================
@@ -377,22 +496,40 @@ with tab1:
     col1, col2 = st.columns(2)
     input_data = {}
 
+    # ========================================
+    # FUNGSI BANTU UNTUK MENAMPILKAN SLIDER + TOOLTIP
+    # ========================================
+    def render_slider_with_tooltip(attr, prefix_key):
+        label = format_attribute_name(attr)
+        tooltip_text = get_tooltip_text(attr)
+        
+        # Tampilkan Label + Ikon Tooltip
+        st.markdown(f"""
+        <div class="slider-label-with-tooltip">
+            <span>{label}</span>
+            <div class="tooltip-container">
+                <span class="tooltip-icon">?</span>
+                <span class="tooltip-text">{tooltip_text}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Slider (label disembunyikan karena sudah dibuat manual di atas)
+        return st.slider(label, 0, 5, 2, key=f"{prefix_key}_{attr}", label_visibility="collapsed")
+
     with col1:
         st.subheader(f"🧠 Soft Skills ({len(soft_attrs)} atribut)")
         for attr in soft_attrs:
-            label = format_attribute_name(attr)
-            input_data[attr] = st.slider(label, 0, 5, 2, key=f"soft_{attr}")
+            input_data[attr] = render_slider_with_tooltip(attr, "soft")
 
     with col2:
         st.subheader(f"💪 Life Skills ({len(life_attrs)} atribut)")
         for attr in life_attrs:
-            label = format_attribute_name(attr)
-            input_data[attr] = st.slider(label, 0, 5, 2, key=f"life_{attr}")
+            input_data[attr] = render_slider_with_tooltip(attr, "life")
 
         st.subheader(f"🛠️ Technical Skills ({len(tech_attrs)} atribut)")
         for attr in tech_attrs:
-            label = format_attribute_name(attr)
-            input_data[attr] = st.slider(label, 0, 5, 2, key=f"tech_{attr}")
+            input_data[attr] = render_slider_with_tooltip(attr, "tech")
 
     col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
     with col_btn2:
